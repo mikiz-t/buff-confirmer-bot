@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "discord.js": "^12.5.1",
+    "knex": "^0.21.5",
+    "nodemon": "^2.0.4",
+    "sqlite3": "^5.0.0"
+  },
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "migrate": "./node_modules/.bin/knex migrate:latest",
+    "start": "node src/index.js"
+  }
+}

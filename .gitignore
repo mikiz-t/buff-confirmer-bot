@@ -1,0 +1,16 @@
+config.json
+db.sqlite
+
+node_modules
+npm-debug.log
+yarn.lock
+package-lock.json
+
+raw
+*.sw?
+.idea
+.DS_Store
+.vagrant
+*.sublime-project
+*.sublime-workspace
+.vscode

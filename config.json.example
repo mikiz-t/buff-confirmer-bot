@@ -1,0 +1,12 @@
+{
+	"token": "",
+	"mode": "prod",
+	"channels": {
+		"763742378972413974": "765965892123099149",
+		"763742378972413976": "765943024550412329"
+	},
+	"confirmationEmoji": "✅",
+	"confirmationThreshold": 2,
+	"trustedConfirmerRoles": ["Admin", "Mod", "Worldbuffs Alliance Mod", "Worldbuffs Horde Mod", "wb-confirmer"],
+	"blacklistedRole": "wb-spastic"
+}
