@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const { mode, token, channels, confirmationThreshold, confirmationEmoji, trustedConfirmerRoles, blacklistedRole } = require('../config.json');
 const db = require('./database');
+const regexes = require('./regexes');
 
 const client = new Discord.Client();
 client.once('ready', () => console.log('Ready!'));
@@ -71,11 +72,8 @@ async function handleMessage(reactionMessage) {
       message_id: reactionMessage.id
     });
 
-    const buffRegex = RegExp(/onyxia|ony|nef|nefarian|hakkar|hoh|heart|rend/, 'gi');
-    const timeRegex = RegExp(/\d{1,2}[:.]?\d{2}|\d{1,2}/, 'g');
-
-    const buff = reactionMessage.content.match(buffRegex);
-    const time = reactionMessage.content.match(timeRegex);
+    const buff = reactionMessage.content.match(regexes.buff);
+    const time = reactionMessage.content.match(regexes.time);
 
     if (!buff || !time) {
       return reactionMessage.reply('Your buff has not been confirmed because it was not properly formatted. It must contain a buff name and a timestamp. Please post a new message.');
