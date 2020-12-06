@@ -72,7 +72,7 @@ async function handleMessage(reactionMessage) {
     });
 
     const buffRegex = RegExp(/onyxia|ony|nef|nefarian|hakkar|hoh|heart|rend/, 'gi');
-    const timeRegex = RegExp(/\d{1,2}:?\d{2}/, 'g');
+    const timeRegex = RegExp(/\d{1,2}[:.]?\d{2}|\d{2}/, 'g');
 
     const buff = reactionMessage.content.match(buffRegex);
     const time = reactionMessage.content.match(timeRegex);
