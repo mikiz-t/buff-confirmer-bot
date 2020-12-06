@@ -6,8 +6,12 @@
     "sqlite3": "^5.0.0"
   },
   "scripts": {
+    "test": "jest",
     "dev": "nodemon src/index.js",
     "migrate": "./node_modules/.bin/knex migrate:latest",
     "start": "node src/index.js"
+  },
+  "devDependencies": {
+    "jest": "^26.6.3"
   }
 }
