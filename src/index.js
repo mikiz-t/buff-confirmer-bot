@@ -120,13 +120,6 @@ async function shouldConfirmMessage(reaction) {
 
 async function handleMessage(reactionMessage) {
   try {
-    const buff = reactionMessage.content.match(regexes.buff);
-    const time = reactionMessage.content.match(regexes.time);
-
-    if (!buff || !time) {
-      return reactionMessage.reply('Your buff has not been confirmed because it was not properly formatted. It must contain a buff name and a timestamp. Please post a new message. Type ?help for more info.');
-    }
-
     confirmedMessages.push({
       channel: reactionMessage.channel.id,
       message: reactionMessage.id,
@@ -136,6 +129,14 @@ async function handleMessage(reactionMessage) {
     await db('buff_messages').insert({
       message_id: reactionMessage.id
     });
+
+    const buff = reactionMessage.content.match(regexes.buff);
+    const time = reactionMessage.content.match(regexes.time);
+
+    if (!buff || !time) {
+      return reactionMessage.reply('Your buff has not been confirmed because it was not properly formatted. It must contain a buff name and a timestamp. Please post a new message. Type ?help for more info.');
+    }
+
     const confirmationMessage = confirmedMessages.find(c => c.message === reactionMessage.id);
 
     const messageContent = formatMessage(buff[0], reactionMessage);
