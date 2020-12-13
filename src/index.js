@@ -18,16 +18,15 @@ if (mode === "dev") {
       message.react(confirmationEmoji); 
     }
   });
-
 } else {
   channelsMap = channels;
 }
 
 client.on('messageReactionAdd', async (reaction) => {
+  if (reaction.emoji.name === '❌') {
+    return shouldDeleteMessage(reaction);
+  }
   if (listeningToChannel(reaction.message.channel.id)) {
-    if (reaction.emoji.name === '❌') {
-      shouldDeleteMessage(reaction);
-    }
     const shouldConfirm = await shouldConfirmMessage(reaction);
     if (shouldConfirm) {
       handleMessage(reaction.message);
@@ -37,15 +36,18 @@ client.on('messageReactionAdd', async (reaction) => {
 
 client.login(token);
 
-function shouldDeleteMessage(reaction) {
-  const confirmedMessage = confirmedMessages.find(c => c.message === reaction.message.id);
+async function shouldDeleteMessage(reaction) {
+  const confirmedMessage = confirmedMessages.find(c => {
+    return c.message === reaction.message.id || c.confirmations.some(conf => conf.message === reaction.message.id)
+  });
+
   if (!confirmedMessage) {
     return false
   }
 
   const shouldDelete = reaction.users.cache.some(u => {
     const member = reaction.message.guild.member(u.id);
-    return u.id == reaction.message.author || isTrustedConfirmer(member);
+    return u.id == confirmedMessage.author || isTrustedConfirmer(member);
   });
 
   if (shouldDelete) {
@@ -54,7 +56,12 @@ function shouldDeleteMessage(reaction) {
       const message = await channel.messages.fetch(m.message);
       message.edit(`~~${message.content}~~ \nThis buff has been cancelled.`);
     })
-    reaction.message.reactions.cache.get('🆗').remove();
+
+    const channel = await reaction.message.guild.channels.cache.get(confirmedMessage.channel);
+    const message = await channel.messages.fetch(confirmedMessage.message);
+    if (message.reactions.cache.has('🆗')) {
+      message.reactions.cache.get('🆗').remove();
+    }
   }
 }
 
@@ -112,6 +119,7 @@ async function handleMessage(reactionMessage) {
     }
 
     confirmedMessages.push({
+      channel: reactionMessage.channel.id,
       message: reactionMessage.id,
       author: reactionMessage.author.id,
       confirmations: []
