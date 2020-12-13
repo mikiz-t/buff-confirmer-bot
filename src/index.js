@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const { mode, token, channels, confirmationThreshold, confirmationEmoji, trustedConfirmerRoles, blacklistedRole } = require('../config.json');
 const db = require('./database');
 const regexes = require('./regexes');
+const help = require('./commands/help');
 
 const client = new Discord.Client();
 client.once('ready', () => console.log('Ready!'));
@@ -13,14 +14,22 @@ if (mode === "dev") {
   channelsMap = {};
   channelsMap['780159998151098378'] = '765940655939125299';
   channelsMap['784885854744084510'] = '784852416591953951';
-  client.on('message', message => { 
-    if (listeningToChannel(message.channel.id)) {
-      message.react(confirmationEmoji); 
-    }
-  });
 } else {
   channelsMap = channels;
 }
+
+client.on('message', message => { 
+  if (mode === 'dev') {
+    if (listeningToChannel(message.channel.id)) {
+      message.react(confirmationEmoji); 
+    }
+  }
+
+  if (message.content.startsWith('?help')) {
+    return help.execute(message);
+  }
+});
+
 
 client.on('messageReactionAdd', async (reaction) => {
   if (reaction.emoji.name === '❌') {
@@ -115,7 +124,7 @@ async function handleMessage(reactionMessage) {
     const time = reactionMessage.content.match(regexes.time);
 
     if (!buff || !time) {
-      return reactionMessage.reply('Your buff has not been confirmed because it was not properly formatted. It must contain a buff name and a timestamp. Please post a new message.');
+      return reactionMessage.reply('Your buff has not been confirmed because it was not properly formatted. It must contain a buff name and a timestamp. Please post a new message. Type ?help for more info.');
     }
 
     confirmedMessages.push({
