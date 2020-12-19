@@ -31,9 +31,9 @@ client.on('message', message => {
 });
 
 
-client.on('messageReactionAdd', async (reaction) => {
+client.on('messageReactionAdd', async (reaction, user) => {
   if (reaction.emoji.name === '❌') {
-    return shouldDeleteMessage(reaction);
+    return shouldDeleteMessage(reaction, user);
   }
   if (listeningToChannel(reaction.message.channel.id)) {
     const shouldConfirm = await shouldConfirmMessage(reaction);
@@ -45,26 +45,27 @@ client.on('messageReactionAdd', async (reaction) => {
 
 client.login(token);
 
-async function shouldDeleteMessage(reaction) {
+async function shouldDeleteMessage(reaction, user) {
   const confirmedMessage = confirmedMessages.find(c => {
-    return c.message === reaction.message.id || c.confirmations.some(conf => conf.message === reaction.message.id)
+    return (c.message === reaction.message.id && c.confirmations.length > 0)
+    || c.confirmations.some(conf => conf.message === reaction.message.id);
   });
 
   if (!confirmedMessage) {
-    return false
+    return false;
   }
 
-  const shouldDelete = reaction.users.cache.some(u => {
-    const member = reaction.message.guild.member(u.id);
-    return u.id == confirmedMessage.author || isTrustedConfirmer(member);
-  });
+  const reactingMember = reaction.message.guild.member(user.id);
+  const shouldDelete = user.id == confirmedMessage.author || isTrustedConfirmer(reactingMember);
 
-  if (shouldDelete) {
+  if (shouldDelete && !confirmedMessage.cancelled) {
+    confirmedMessage.cancelled = true;
+
     confirmedMessage.confirmations.forEach(async m => {
       const channel = await reaction.message.guild.channels.cache.get(m.channel);
       const message = await channel.messages.fetch(m.message);
       message.edit(`~~${message.content}~~ \nThis buff has been cancelled.`);
-    })
+    });
 
     const channel = await reaction.message.guild.channels.cache.get(confirmedMessage.channel);
     const message = await channel.messages.fetch(confirmedMessage.message);
@@ -124,7 +125,8 @@ async function handleMessage(reactionMessage) {
       channel: reactionMessage.channel.id,
       message: reactionMessage.id,
       author: reactionMessage.author.id,
-      confirmations: []
+      confirmations: [],
+      cancelled: false
     });
     await db('buff_messages').insert({
       message_id: reactionMessage.id
