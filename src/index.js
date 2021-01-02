@@ -32,6 +32,7 @@ client.on('message', message => {
 
 
 client.on('messageReactionAdd', async (reaction, user) => {
+  if ((user.bot || reaction.message.author.bot) && mode !== 'dev') return;
   if (reaction.emoji.name === '❌') {
     return shouldDeleteMessage(reaction, user);
   }
@@ -43,7 +44,45 @@ client.on('messageReactionAdd', async (reaction, user) => {
   }
 });
 
+client.on('messageUpdate', (oldMessage, newMessage) => {
+  const confirmedMessage = getConfirmedBuffMessage(newMessage.id);
+
+  if (confirmedMessage) {
+    const buffEmote = newMessage.guild.emojis.cache.find(emoji => emoji.name === 'pepebuffs');
+
+    confirmedMessage.confirmations.forEach(async m => {
+      const channel = await newMessage.guild.channels.cache.get(m.channel);
+      const message = await channel.messages.fetch(m.message);
+      message.edit(`${buffEmote} ${newMessage.content} ${buffEmote}
+This message has been edited by ${newMessage.author}.
+Original message: "${confirmedMessage.content}"`);
+    });
+
+    newMessage.channel.send(`${newMessage.author} has edited their confirmed buff! New message: "${newMessage.content}"`)
+  }
+});
+
+client.on('messageDelete', deletedMessage => {
+  const confirmedMessage = getConfirmedBuffMessage(deletedMessage.id);
+
+  if (confirmedMessage && !confirmedMessage.cancelled) {
+    confirmedMessage.cancelled = true;
+
+    confirmedMessage.confirmations.forEach(async m => {
+      const channel = await deletedMessage.guild.channels.cache.get(m.channel);
+      const message = await channel.messages.fetch(m.message);
+      message.edit(`~~${message.content}~~ \nThis confirmation has been deleted.`);
+    });
+
+    deletedMessage.channel.send(`A confirmed buff by ${deletedMessage.author} has been deleted: "${deletedMessage.content}"`);
+  }
+});
+
 client.login(token);
+
+function getConfirmedBuffMessage(id) {
+  return confirmedMessages.find(c => c.message === id && c.confirmations.length > 0);
+} 
 
 async function shouldDeleteMessage(reaction, user) {
   const confirmedMessage = confirmedMessages.find(c => {
@@ -125,6 +164,7 @@ async function handleMessage(reactionMessage) {
       channel: reactionMessage.channel.id,
       message: reactionMessage.id,
       author: reactionMessage.author.id,
+      content: reactionMessage.content,
       confirmations: [],
       cancelled: false
     });
