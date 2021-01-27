@@ -183,7 +183,7 @@ async function handleMessage(reactionMessage) {
 
     const messageContent = formatMessage(buff[0], reactionMessage);
 
-    if (['hakkar', 'hoh', 'heart'].includes(buff[0].toLowerCase())) {
+    if (['hakkar', 'hoh', 'heart', 'zg'].includes(buff[0].toLowerCase())) {
       Object.values(channelsMap).forEach(async channel => {
         const outputChannel = reactionMessage.channel.guild.channels.cache.get(channel);
         const message = await outputChannel.send(messageContent);
