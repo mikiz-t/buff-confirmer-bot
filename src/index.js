@@ -18,10 +18,10 @@ if (mode === "dev") {
   channelsMap = channels;
 }
 
-client.on('message', message => { 
+client.on('message', message => {
   if (mode === 'dev') {
     if (listeningToChannel(message.channel.id)) {
-      message.react(confirmationEmoji); 
+      message.react(confirmationEmoji);
     }
   }
 
@@ -82,7 +82,7 @@ client.login(token);
 
 function getConfirmedBuffMessage(id) {
   return confirmedMessages.find(c => c.message === id && c.confirmations.length > 0);
-} 
+}
 
 async function shouldDeleteMessage(reaction, user) {
   const confirmedMessage = confirmedMessages.find(c => {
@@ -183,7 +183,7 @@ async function handleMessage(reactionMessage) {
 
     const messageContent = formatMessage(buff[0], reactionMessage);
 
-    if (['hakkar', 'hoh', 'heart'].includes(buff[0].toLowerCase())) {
+    if (['hakkar', 'hoh', 'heart', 'zg'].includes(buff[0].toLowerCase())) {
       Object.values(channelsMap).forEach(async channel => {
         const outputChannel = reactionMessage.channel.guild.channels.cache.get(channel);
         const message = await outputChannel.send(messageContent);
@@ -228,6 +228,7 @@ function formatMessage(buff, message) {
     case 'hakkar':
     case 'hoh':
     case 'heart':
+    case 'zg':
       buffEmote = 'hakkar';
       break;
     case 'rend':
@@ -241,5 +242,5 @@ function formatMessage(buff, message) {
   buffEmote = message.guild.emojis.cache.find(emoji => emoji.name === buffEmote);
 
   return `${buffEmote} "${message.content}" ${buffEmote}
-Confirrmed by: ${message.author}`;
+Confirmed by: ${message.author}`;
 }
