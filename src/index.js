@@ -39,7 +39,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
   if (listeningToChannel(reaction.message.channel.id)) {
     const shouldConfirm = await shouldConfirmMessage(reaction);
     if (shouldConfirm) {
-      handleMessage(reaction.message);
+      await handleMessage(reaction.message);
     }
   }
 });
