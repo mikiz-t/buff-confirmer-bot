@@ -32,14 +32,18 @@ client.on('message', message => {
 
 
 client.on('messageReactionAdd', async (reaction, user) => {
-  if ((user.bot || reaction.message.author.bot) && mode !== 'dev') return;
+  if (reaction.message.author.bot && mode !== 'dev') return;
+
   if (reaction.emoji.name === '❌') {
     return shouldDeleteMessage(reaction, user);
   }
+
   if (listeningToChannel(reaction.message.channel.id)) {
-    const shouldConfirm = await shouldConfirmMessage(reaction);
-    if (shouldConfirm) {
-      await handleMessage(reaction.message);
+    if (reaction.emoji.name === confirmationEmoji) {
+      shouldConfirmMessage(reaction);
+    }
+    if (reaction.emoji.name === '🆗' && reaction.me) {
+      handleConfirmation(reaction.message);
     }
   }
 });
@@ -124,11 +128,6 @@ function listeningToChannel(channelId) {
 }
 
 async function shouldConfirmMessage(reaction) {
-  //check it's the right emote
-  if (reaction.emoji.name !== confirmationEmoji) {
-    return false;
-  }
-
   //check if it was already confirmed
   const dbMessages = await db('buff_messages').where({
     message_id: reaction.message.id
@@ -155,10 +154,12 @@ async function shouldConfirmMessage(reaction) {
     return roles.includes(blacklistedRole) ? total : total + 1;
   }, 0);
 
-  return hasTrustedConfirmer || (validConfirmations >= confirmationThreshold);
+  if (hasTrustedConfirmer || (validConfirmations >= confirmationThreshold)) {
+    reaction.message.react('🆗');
+  }
 }
 
-async function handleMessage(reactionMessage) {
+async function handleConfirmation(reactionMessage) {
   try {
     confirmedMessages.push({
       channel: reactionMessage.channel.id,
@@ -207,7 +208,6 @@ async function handleMessage(reactionMessage) {
       }
     }
 
-    reactionMessage.react('🆗');
   } catch (err) {
     console.log(err);
   }
